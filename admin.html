@@ -1,46 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
-<style>
-body { font-family: Arial; background:#111; color:white; text-align:center; }
-input, button { margin: 5px; padding: 8px; border-radius: 6px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Sulifa Game</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    input[type="number"] { width: 80px; }
+    button { padding: 5px 10px; margin-left: 5px; cursor: pointer; }
+  </style>
 </head>
 <body>
-<h2>Admin Panel</h2>
 
-<input id="adminKey" type="text" placeholder="Admin Key" />
-<button onclick="loadPlayers()">Load Players</button>
+  <h1>Admin Panel - Sulifa Game</h1>
 
-<div id="players"></div>
+  <table id="playersTable">
+    <thead>
+      <tr>
+        <th>Player ID</th>
+        <th>Username</th>
+        <th>Balance</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Player rows will be inserted here -->
+    </tbody>
+  </table>
 
-<script>
-const API = "https://sulifaonlinerender.onrender.com";
+  <script>
+    const API_URL = "https://sulifaonlinerender.onrender.com"; // Render серверіңнің URL
 
-async function loadPlayers() {
-  const key = document.getElementById("adminKey").value;
-  const res = await fetch(`${API}/admin/players?key=${key}`);
-  const players = await res.json();
-  const container = document.getElementById("players");
-  container.innerHTML = "";
-  players.forEach(p => {
-    const div = document.createElement("div");
-    div.innerHTML = `${p.firstName} (@${p.username}) - Balance: ${p.balance} 
-      <button onclick="addBalance('${key}','${p.telegramId}')">+10</button>`;
-    container.appendChild(div);
-  });
-}
+    // Ойыншылар тізімін алу
+    async function fetchPlayers() {
+      const res = await fetch(`${API_URL}/admin/players`);
+      const players = await res.json();
+      const tbody = document.querySelector("#playersTable tbody");
+      tbody.innerHTML = "";
+      players.forEach(player => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${player._id}</td>
+          <td>${player.username}</td>
+          <td>${player.balance}</td>
+          <td>
+            <input type="number" id="balance-${player._id}" value="${player.balance}">
+            <button onclick="updateBalance('${player._id}')">Update</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-async function addBalance(key, telegramId) {
-  const res = await fetch(`${API}/admin/add-balance`, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ key, telegramId, amount:10 })
-  });
-  loadPlayers();
-}
-</script>
+    // Балансты өзгерту
+    async function updateBalance(playerId) {
+      const newBalance = document.getElementById(`balance-${playerId}`).value;
+      const res = await fetch(`${API_URL}/admin/player/${playerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: parseInt(newBalance) })
+      });
+      if (res.ok) {
+        alert("Balance updated!");
+        fetchPlayers(); // жаңарту
+      } else {
+        alert("Failed to update balance");
+      }
+    }
+
+    // Бастапқы жүктеу
+    fetchPlayers();
+  </script>
+
 </body>
 </html>
