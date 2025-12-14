@@ -1,80 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Sulifa Game</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    input[type="number"] { width: 80px; }
-    button { padding: 5px 10px; margin-left: 5px; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+input[type="number"] { width: 80px; }
+button { padding: 5px 10px; }
+</style>
 </head>
 <body>
 
-  <h1>Admin Panel - Sulifa Game</h1>
-
-  <table id="playersTable">
+<h1>Admin Panel</h1>
+<table id="playersTable">
     <thead>
-      <tr>
-        <th>Player ID</th>
-        <th>Username</th>
-        <th>Balance</th>
-        <th>Actions</th>
-      </tr>
+        <tr>
+            <th>Username</th>
+            <th>Balance</th>
+            <th>Change Balance</th>
+        </tr>
     </thead>
-    <tbody>
-      <!-- Player rows will be inserted here -->
-    </tbody>
-  </table>
+    <tbody></tbody>
+</table>
 
-  <script>
-    const API_URL = "https://sulifaonlinerender.onrender.com"; // Render серверіңнің URL
+<script>
+const API_URL = "https://sulifaonlinerender.onrender.com"; // Render API URL
 
-    // Ойыншылар тізімін алу
-    async function fetchPlayers() {
-      const res = await fetch(`${API_URL}/admin/players`);
-      const players = await res.json();
-      const tbody = document.querySelector("#playersTable tbody");
-      tbody.innerHTML = "";
-      players.forEach(player => {
+// Ойыншыларды алу
+async function loadPlayers() {
+    const res = await fetch(`${API_URL}/admin/players`);
+    const players = await res.json();
+    const tbody = document.querySelector("#playersTable tbody");
+    tbody.innerHTML = "";
+    players.forEach(player => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${player._id}</td>
-          <td>${player.username}</td>
-          <td>${player.balance}</td>
-          <td>
-            <input type="number" id="balance-${player._id}" value="${player.balance}">
-            <button onclick="updateBalance('${player._id}')">Update</button>
-          </td>
+            <td>${player.username}</td>
+            <td>${player.balance}</td>
+            <td>
+                <input type="number" value="${player.balance}" id="bal-${player._id}">
+                <button onclick="updateBalance('${player._id}')">Update</button>
+            </td>
         `;
         tbody.appendChild(tr);
-      });
-    }
+    });
+}
 
-    // Балансты өзгерту
-    async function updateBalance(playerId) {
-      const newBalance = document.getElementById(`balance-${playerId}`).value;
-      const res = await fetch(`${API_URL}/admin/player/${playerId}`, {
+// Баланс өзгерту
+async function updateBalance(id) {
+    const input = document.getElementById(`bal-${id}`);
+    const balance = Number(input.value);
+    await fetch(`${API_URL}/admin/player/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ balance: parseInt(newBalance) })
-      });
-      if (res.ok) {
-        alert("Balance updated!");
-        fetchPlayers(); // жаңарту
-      } else {
-        alert("Failed to update balance");
-      }
-    }
+        body: JSON.stringify({ balance })
+    });
+    loadPlayers(); // қайта жаңарту
+}
 
-    // Бастапқы жүктеу
-    fetchPlayers();
-  </script>
+loadPlayers();
+</script>
 
 </body>
 </html>
