@@ -1,64 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
-<style>
-body {
-  background:#020617;
-  color:white;
-  font-family:Arial;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box {
-  background:#0f172a;
-  padding:24px;
-  border-radius:16px;
-  width:320px;
-}
-input, button {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-}
-button {
-  background:#22c55e;
-  cursor:pointer;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial; padding: 20px }
+    input { margin: 5px }
+    button { margin: 5px }
+    table { border-collapse: collapse; margin-top: 20px }
+    td, th { border: 1px solid #ccc; padding: 6px }
+  </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>🛠 Admin Balance</h2>
+<h2>🛠 Admin Panel</h2>
 
-  <input id="tid" placeholder="Telegram ID">
-  <input id="amount" placeholder="Amount (+/-)">
+<label>ADMIN KEY:</label>
+<input id="key" placeholder="ADMIN_KEY" />
 
-  <button onclick="add()">Қосу</button>
-  <div id="msg"></div>
-</div>
+<button onclick="loadUsers()">Load users</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>User ID</th>
+      <th>Balance</th>
+      <th>Add</th>
+    </tr>
+  </thead>
+  <tbody id="users"></tbody>
+</table>
 
 <script>
-function add() {
-  fetch("/admin/balance", {
+const API = "https://sulifaonlinerender.onrender.com";
+
+async function loadUsers() {
+  const key = document.getElementById("key").value;
+
+  const res = await fetch(`${API}/admin/users?key=${key}`);
+  const data = await res.json();
+
+  const tbody = document.getElementById("users");
+  tbody.innerHTML = "";
+
+  data.forEach(u => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.balance}</td>
+        <td>
+          <input type="number" id="amt-${u.userId}" value="100" />
+          <button onclick="addBalance('${u.userId}')">+</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function addBalance(userId) {
+  const key = document.getElementById("key").value;
+  const amount = document.getElementById("amt-" + userId).value;
+
+  await fetch(`${API}/admin/add-balance?key=${key}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin-key": "ADMIN_KEY_HERE"
-    },
-    body: JSON.stringify({
-      telegramId: Number(tid.value),
-      amount: Number(amount.value)
-    })
-  })
-  .then(r => r.json())
-  .then(() => msg.innerText = "✅ Жаңартылды");
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  loadUsers();
 }
 </script>
 
