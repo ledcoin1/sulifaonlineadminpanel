@@ -1,23 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Сулифа Админ Панель</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  input, button { padding: 8px; margin: 5px; }
+</style>
+</head>
+<body>
 <h2>Админ панель – Баланс жаңарту</h2>
 
-<input type="text" id="telegramId" placeholder="Telegram ID">
-<input type="number" id="newBalance" placeholder="Жаңа баланс">
+<label>Telegram ID:</label><br>
+<input type="text" id="telegramId" placeholder="Telegram ID"><br>
+
+<label>Жаңа баланс:</label><br>
+<input type="number" id="newBalance" placeholder="Жаңа баланс"><br>
+
 <button onclick="updateBalance()">Жаңарту</button>
 
+<p id="message"></p>
+
 <script>
-const adminKey = "YOUR_ADMIN_KEY";
+  // Render-дегі backend URL
+  const backendURL = "https://sulifaonlinerender.onrender.com";
 
-async function updateBalance() {
-  const telegramId = document.getElementById("telegramId").value;
-  const newBalance = Number(document.getElementById("newBalance").value);
+  // Админ кілт (Render .env ішінен алынатын құпия сөзбен сәйкес болуы керек)
+  const adminKey = "YOUR_ADMIN_KEY";
 
-  const res = await fetch("https://sulifaonlinerender.onrender.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ telegramId, newBalance, adminKey })
-  });
+  async function updateBalance() {
+    const telegramId = document.getElementById("telegramId").value;
+    const newBalance = Number(document.getElementById("newBalance").value);
 
-  const data = await res.json();
-  alert(data.message + ": " + data.balance);
-}
+    if (!telegramId || isNaN(newBalance)) {
+      alert("Telegram ID мен жаңа баланс дұрыс енгізілгенін тексеріңіз!");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${backendURL}/api/admin/update-balance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramId, newBalance, adminKey })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("message").innerText = `Баланс жаңартылды: ${data.balance}`;
+      } else {
+        document.getElementById("message").innerText = `Қате: ${data.error}`;
+      }
+    } catch (err) {
+      document.getElementById("message").innerText = "Серверге қосылу мүмкін емес!";
+      console.error(err);
+    }
+  }
 </script>
+</body>
+</html>
