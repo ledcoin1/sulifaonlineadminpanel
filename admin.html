@@ -2,20 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Сулифа Админ Панель</title>
+<title>Сулифа – Админ Панель</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  input, button { padding: 8px; margin: 5px; }
+  body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+  h2 { text-align: center; }
+  input, button { width: 100%; padding: 10px; margin: 8px 0; }
+  #message { margin-top: 15px; font-weight: bold; }
 </style>
 </head>
 <body>
 <h2>Админ панель – Баланс жаңарту</h2>
 
-<label>Telegram ID:</label><br>
-<input type="text" id="telegramId" placeholder="Telegram ID"><br>
+<label>Telegram ID:</label>
+<input type="text" id="telegramId" placeholder="Telegram ID">
 
-<label>Жаңа баланс:</label><br>
-<input type="number" id="newBalance" placeholder="Жаңа баланс"><br>
+<label>Жаңа баланс:</label>
+<input type="number" id="newBalance" placeholder="Жаңа баланс">
 
 <button onclick="updateBalance()">Жаңарту</button>
 
@@ -25,11 +27,11 @@
   // Render-дегі backend URL
   const backendURL = "https://sulifaonlinerender.onrender.com";
 
-  // Админ кілт (Render .env ішінен алынатын құпия сөзбен сәйкес болуы керек)
+  // Админ кілт (Render .env ішіндегі ADMIN_KEY-ке сәйкес)
   const adminKey = "YOUR_ADMIN_KEY";
 
   async function updateBalance() {
-    const telegramId = document.getElementById("telegramId").value;
+    const telegramId = document.getElementById("telegramId").value.trim();
     const newBalance = Number(document.getElementById("newBalance").value);
 
     if (!telegramId || isNaN(newBalance)) {
