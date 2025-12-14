@@ -1,75 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel</title>
-  <style>
-    body { font-family: Arial; padding: 20px }
-    input { margin: 5px }
-    button { margin: 5px }
-    table { border-collapse: collapse; margin-top: 20px }
-    td, th { border: 1px solid #ccc; padding: 6px }
-  </style>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+body { font-family: Arial; background:#111; color:white; text-align:center; }
+input, button { margin: 5px; padding: 8px; border-radius: 6px; }
+</style>
 </head>
 <body>
+<h2>Admin Panel</h2>
 
-<h2>🛠 Admin Panel</h2>
+<input id="adminKey" type="text" placeholder="Admin Key" />
+<button onclick="loadPlayers()">Load Players</button>
 
-<label>ADMIN KEY:</label>
-<input id="key" placeholder="ADMIN_KEY" />
-
-<button onclick="loadUsers()">Load users</button>
-
-<table>
-  <thead>
-    <tr>
-      <th>User ID</th>
-      <th>Balance</th>
-      <th>Add</th>
-    </tr>
-  </thead>
-  <tbody id="users"></tbody>
-</table>
+<div id="players"></div>
 
 <script>
 const API = "https://sulifaonlinerender.onrender.com";
 
-async function loadUsers() {
-  const key = document.getElementById("key").value;
-
-  const res = await fetch(`${API}/admin/users?key=${key}`);
-  const data = await res.json();
-
-  const tbody = document.getElementById("users");
-  tbody.innerHTML = "";
-
-  data.forEach(u => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${u.userId}</td>
-        <td>${u.balance}</td>
-        <td>
-          <input type="number" id="amt-${u.userId}" value="100" />
-          <button onclick="addBalance('${u.userId}')">+</button>
-        </td>
-      </tr>
-    `;
+async function loadPlayers() {
+  const key = document.getElementById("adminKey").value;
+  const res = await fetch(`${API}/admin/players?key=${key}`);
+  const players = await res.json();
+  const container = document.getElementById("players");
+  container.innerHTML = "";
+  players.forEach(p => {
+    const div = document.createElement("div");
+    div.innerHTML = `${p.firstName} (@${p.username}) - Balance: ${p.balance} 
+      <button onclick="addBalance('${key}','${p.telegramId}')">+10</button>`;
+    container.appendChild(div);
   });
 }
 
-async function addBalance(userId) {
-  const key = document.getElementById("key").value;
-  const amount = document.getElementById("amt-" + userId).value;
-
-  await fetch(`${API}/admin/add-balance?key=${key}`, {
+async function addBalance(key, telegramId) {
+  const res = await fetch(`${API}/admin/add-balance`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, amount })
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ key, telegramId, amount:10 })
   });
-
-  loadUsers();
+  loadPlayers();
 }
 </script>
-
 </body>
 </html>
