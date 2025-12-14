@@ -1,68 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-<style>
-body { font-family: Arial, sans-serif; padding: 20px; }
-table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-input[type="number"] { width: 80px; }
-button { padding: 5px 10px; }
-</style>
-</head>
-<body>
+<h2>Админ панель – Баланс жаңарту</h2>
 
-<h1>Admin Panel</h1>
-<table id="playersTable">
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Balance</th>
-            <th>Change Balance</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+<input type="text" id="telegramId" placeholder="Telegram ID">
+<input type="number" id="newBalance" placeholder="Жаңа баланс">
+<button onclick="updateBalance()">Жаңарту</button>
 
 <script>
-const API_URL = "https://sulifaonlinerender.onrender.com"; // Render API URL
+const adminKey = "YOUR_ADMIN_KEY";
 
-// Ойыншыларды алу
-async function loadPlayers() {
-    const res = await fetch(`${API_URL}/admin/players`);
-    const players = await res.json();
-    const tbody = document.querySelector("#playersTable tbody");
-    tbody.innerHTML = "";
-    players.forEach(player => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${player.username}</td>
-            <td>${player.balance}</td>
-            <td>
-                <input type="number" value="${player.balance}" id="bal-${player._id}">
-                <button onclick="updateBalance('${player._id}')">Update</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+async function updateBalance() {
+  const telegramId = document.getElementById("telegramId").value;
+  const newBalance = Number(document.getElementById("newBalance").value);
+
+  const res = await fetch("https://sulifaonlinerender.onrender.com", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telegramId, newBalance, adminKey })
+  });
+
+  const data = await res.json();
+  alert(data.message + ": " + data.balance);
 }
-
-// Баланс өзгерту
-async function updateBalance(id) {
-    const input = document.getElementById(`bal-${id}`);
-    const balance = Number(input.value);
-    await fetch(`${API_URL}/admin/player/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ balance })
-    });
-    loadPlayers(); // қайта жаңарту
-}
-
-loadPlayers();
 </script>
-
-</body>
-</html>
