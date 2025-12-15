@@ -1,72 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kk">
 <head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
-<style>
-  body { font-family: Arial; max-width: 600px; margin: 30px auto; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  input, button { padding: 5px; margin: 3px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Admin Panel | Sulifa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<h2>Admin Panel – Ойыншылар және баланстар</h2>
-<label>Admin Key:</label>
-<input type="password" id="adminKey">
-<button onclick="loadPlayers()">Кіру</button>
+<body class="bg-gray-100 text-gray-800">
 
-<div id="panel" style="display:none;">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Баланс</th>
-        <th>Жаңарту</th>
-      </tr>
-    </thead>
-    <tbody id="playersTable"></tbody>
-  </table>
+<div class="container mx-auto p-6">
+
+  <h1 class="text-3xl font-bold mb-6">👑 Admin Panel</h1>
+
+  <!-- Key -->
+  <div class="mb-4">
+    <label class="block font-semibold mb-1">ADMIN KEY:</label>
+    <input id="adminKey" type="text" placeholder="12345" class="border rounded p-2 w-full">
+  </div>
+
+  <!-- Players List -->
+  <div class="mb-6">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-xl font-semibold">🎮 Ойыншылар</h2>
+      <button onclick="loadPlayers()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Жаңарту</button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white shadow rounded">
+        <thead>
+          <tr>
+            <th class="py-2 px-4 border-b">tgId / userId</th>
+            <th class="py-2 px-4 border-b">Баланс</th>
+            <th class="py-2 px-4 border-b">Өзгерту</th>
+          </tr>
+        </thead>
+        <tbody id="playersTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add / Change Balance -->
+  <div class="mb-6 bg-white p-4 rounded shadow">
+    <h2 class="text-xl font-semibold mb-2">Баланс өзгерту</h2>
+    <div class="flex flex-col md:flex-row gap-2">
+      <input id="tgId" placeholder="tgId немесе userId" class="border rounded p-2 flex-1">
+      <input id="balance" placeholder="Жаңа баланс" type="number" class="border rounded p-2 flex-1">
+      <button onclick="setBalance()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Сақтау</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
-const backendURL = "https://sulifaonlinerender.onrender.com";
+const SERVER = "https://sulifaonlinerender.onrender.com";
 
-async function loadPlayers() {
-  const key = document.getElementById("adminKey").value;
-  if (!key) { alert("Admin Key енгізіңіз"); return; }
+function loadPlayers() {
+  const key = document.getElementById("adminKey").value.trim();
+  if (!key) return alert("ADMIN KEY енгізіңіз");
 
-  const res = await fetch(`${backendURL}/allPlayers`, { headers: { "admin-key": key } });
-  if (!res.ok) { alert("Қате немесе Unauthorized"); return; }
-  const data = await res.json();
-
-  const tbody = document.getElementById("playersTable");
-  tbody.innerHTML = "";
-  data.forEach(player => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${player.id}</td>
-      <td><input type="number" value="${player.balance}" id="balance-${player.id}"></td>
-      <td><button onclick="updateBalance('${player.id}')">Жаңарту</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  document.getElementById("panel").style.display = "block";
+  fetch(`${SERVER}/admin/players?key=${key}`)
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.getElementById("playersTable");
+      tbody.innerHTML = "";
+      data.forEach(p => {
+        const id = p.tgId || p.telegramId || p.userId || "unknown";
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="py-2 px-4 border-b">${id}</td>
+          <td class="py-2 px-4 border-b">${p.balance}</td>
+          <td class="py-2 px-4 border-b">
+            <button class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+              onclick="fillChange('${id}')">Өзгерту</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => alert("Қате: " + err));
 }
 
-async function updateBalance(id) {
-  const newBalance = Number(document.getElementById(`balance-${id}`).value);
-  const key = document.getElementById("adminKey").value;
+function fillChange(tgId) {
+  document.getElementById("tgId").value = tgId;
+}
 
-  const res = await fetch(`${backendURL}/updateBalance`, {
+function setBalance() {
+  const key = document.getElementById("adminKey").value.trim();
+  const tgId = document.getElementById("tgId").value.trim();
+  const balance = Number(document.getElementById("balance").value);
+
+  if (!key || !tgId || isNaN(balance)) return alert("Барлық өрістерді толтырыңыз");
+
+  fetch(`${SERVER}/admin/balance`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "admin-key": key },
-    body: JSON.stringify({ id, balance: newBalance })
-  });
-
-  const data = await res.json();
-  alert(`Баланс жаңартылды: ${data.balance}`);
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tgId, balance, key })
+  })
+  .then(r => r.json())
+  .then(() => {
+    alert("Баланс өзгертілді");
+    loadPlayers();
+  })
+  .catch(err => alert("Қате: " + err));
 }
+
+// Автоматты түрде алғашқы жүктеу
+// loadPlayers(); // қажет болса uncomment
 </script>
+
 </body>
 </html>
